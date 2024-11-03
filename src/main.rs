@@ -4,6 +4,9 @@ use std::process::{Command, Stdio};
 use std::sync::{Arc, Mutex};
 use ctrlc;
 use dotenvy::dotenv;
+use crossterm::ExecutableCommand;
+use crossterm::terminal::{EnterAlternateScreen, LeaveAlternateScreen};
+use std::io::stdout;
 
 struct Pane {
     process: Arc<Mutex<std::process::Child>>,
@@ -86,6 +89,8 @@ fn main() -> io::Result<()> {
         }
     });
 
+    stdout().execute(EnterAlternateScreen)?;
+
     let session = Session::new(&shell)?;
 
     // session.add_window(&shell)?;
@@ -96,5 +101,12 @@ fn main() -> io::Result<()> {
         let _ = first_pane.lock().unwrap().kill();
     }).expect("Error setting Ctrl-C handler");
 
-    session.start()
+    let _ = session.start();
+
+    let status = session.windows[0].panes[0].process.lock().unwrap().wait();
+
+    stdout().execute(LeaveAlternateScreen)?;
+
+    // return process exit status
+    status.map(|_| ())
 }
