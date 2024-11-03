@@ -4,6 +4,9 @@ use std::process::{Command, Stdio};
 use std::sync::{Arc, Mutex};
 use ctrlc;
 use dotenvy::dotenv;
+use crossterm::ExecutableCommand;
+use crossterm::terminal::{EnterAlternateScreen, LeaveAlternateScreen};
+use std::io::stdout;
 
 fn main() -> io::Result<()> {
     dotenv().ok();
@@ -15,6 +18,8 @@ fn main() -> io::Result<()> {
         }
     });
 
+    stdout().execute(EnterAlternateScreen)?;
+
     let child = Arc::new(Mutex::new(
         Command::new(shell)
             .stdin(Stdio::inherit())
@@ -23,12 +28,16 @@ fn main() -> io::Result<()> {
             .spawn()?,
     ));
 
+    // ^C
     let child_clone = Arc::clone(&child);
     ctrlc::set_handler(move || {
-        // Ctrl+C を受け取ったときに子プロセスにシグナルを送る
         let _ = child_clone.lock().unwrap().kill();
     }).expect("Error setting Ctrl-C handler");
 
-    child.lock().unwrap().wait()?;
-    Ok(())
+    let status = child.lock().unwrap().wait();
+
+    stdout().execute(LeaveAlternateScreen)?;
+
+    // return process exit status
+    status.map(|_| ())
 }
