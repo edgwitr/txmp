@@ -1,3 +1,3 @@
-# Terminal (X-platform) MultiPlexer
+# X-Platform Terminal Multiplexer
 ## usage
 あとでかく
