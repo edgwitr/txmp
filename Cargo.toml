@@ -4,3 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+chrono = "0.4.38"
+crossterm = "0.28.1"
+portable-pty = "0.8.1"
+tokio = "1.41.0"
